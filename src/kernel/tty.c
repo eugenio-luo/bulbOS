@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "vga.h"
+#include <kernel/vga.h>
 #include <kernel/tty.h>
 #include <kernel/page.h>
 
