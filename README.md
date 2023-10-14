@@ -10,7 +10,7 @@ BulbOS is a toy operating system still in development targetting x86 32bit archi
 - `grub-mkrescue`
 - `gdb` (optional but useful for debugging)
 
-To compile and run:
+To compile and run, `i386-elf-gcc` and `i386-elf-ar` has to be in `$PATH` or change the variables`CC` and `AR` in `Makefile`, then:
 
 ```bash
 make
@@ -24,5 +24,6 @@ make debug
 ## TODO
 
 - complete rewrite of the project to structure it better
+- write unit tests for every part
 - loading process
 - syscalls
