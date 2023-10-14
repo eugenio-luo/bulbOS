@@ -1,0 +1,8 @@
+*.iso
+isodir
+sysroot
+*.img
+*.ext2
+*.log
+*.a
+*.kernel
