@@ -7,6 +7,10 @@
 #include <kernel/inode.h>
 #include <kernel/dir.h>
 #include <kernel/pipe.h>
+#include <kernel/dirent.h>
+#include <kernel/vmm.h>
+#include <string.h>
+#include <stdlib.h>
 
 extern void syscall_handler(void);
 uintptr_t syscall_table[SYSCALL_COUNT];
@@ -20,7 +24,8 @@ syscall_read(int fd, void *buffer, size_t size)
 static int
 syscall_write(int fd, void *buffer, size_t size)
 {
-        return file_write(current_task->open_files[fd], buffer, size);
+        int ret = file_write(current_task->open_files[fd], buffer, size);
+        sleep(1);
 }
 
 static int
@@ -34,7 +39,18 @@ syscall_close(int fd)
 static int
 syscall_fstat(int fd, stat_t *statbuf)
 {
-        return file_stat(current_task->open_files[fd], statbuf);
+       return file_stat(current_task->open_files[fd], statbuf);
+
+        /*
+        int ret = file_stat(current_task->open_files[fd], statbuf);
+        printf("\nfd: %d\n", fd);
+        printf("device: %d\n", statbuf->device);
+        printf("inode_n: %d\n", statbuf->inode_n);
+        printf("mode: %d\n", statbuf->mode);
+        printf("size: %d\n", statbuf->size);
+        printf("creation_time: %x\n", statbuf->creation_time);
+        return ret;
+        */
 }
         
 static int
@@ -82,7 +98,7 @@ syscall_pipe(int pipefd[2])
 
         int rfd = fd_alloc(read);
         if (rfd == -1) {
-                file_close(read);
+        file_close(read);
                 file_close(write);
                 return -1;
         }
@@ -98,6 +114,33 @@ syscall_pipe(int pipefd[2])
         pipefd[0] = rfd;
         pipefd[1] = wfd;
         return 0;
+}
+
+static int
+syscall_readdir(struct dirent **entries, char *path)
+{
+        dentry_t *dir = dir_get(path);
+        if (!dir || !dir->children) {
+            return -1;
+        }
+
+        *entries = kmalloc(sizeof(struct dirent));
+        struct dirent *tmp = *entries, *prev = NULL;
+        dentry_t *child = dir;
+        for (dentry_t *child = dir->children; child != NULL;
+                child = child->next_sib, tmp = kmalloc(sizeof(struct dirent))) {
+            
+            if (prev) prev->next = tmp;
+            
+            //printf("tmp->inode_n: %d\n", child->inode->n);
+            memset(tmp, sizeof(struct dirent), 0);
+            tmp->inode_n = child->inode->n;
+            size_t slen = strlen(child->path);
+            memcpy(tmp->name, child->path, (slen < 256) ? slen : 256);
+            
+            prev = tmp;
+            tmp = tmp->next;
+        }
 }
 
 int
@@ -129,4 +172,5 @@ syscall_init(void)
         syscall_table[SYS_MKDIR] = (uintptr_t) syscall_mkdir; 
         syscall_table[SYS_DUP] = (uintptr_t) syscall_dup; 
         syscall_table[SYS_PIPE] = (uintptr_t) syscall_pipe; 
+        syscall_table[SYS_READDIR] = (uintptr_t) syscall_readdir; 
 }

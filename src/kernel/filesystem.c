@@ -19,12 +19,16 @@ ext2_inode_idx(uint32_t inode_n)
 {
         uint32_t inode_idx = inode_n - 1;
 
-        uint32_t descr_idx = inode_idx / sblock->inodes_per_group;
-        uint32_t descr_inode_idx = inode_idx % sblock->inodes_per_group;
+        uint32_t descr_idx = (inode_idx + 1) / sblock->inodes_per_group;
+        uint32_t descr_inode_idx = (inode_idx + 1) % sblock->inodes_per_group;
 
-        uint32_t inode_table_idx = bg_descrs[descr_idx].inode_table;
+        uint32_t inode_table_idx = descr_idx * sblock->blocks_pg + bg_descrs[descr_idx].inode_table;
         uint32_t table_block_idx = descr_inode_idx / INODES_PER_BLOCK;
        
+        //printf("\ninode_idx: %d, descr_idx: %d, descr_inode_idx: %d,
+        //        inode_table_idx: %d, table_block_idx: %d\n", 
+        //        inode_idx, descr_idx, descr_inode_idx, inode_table_idx, table_block_idx);
+
         return (inode_idx_t) {
                 .block = inode_table_idx + table_block_idx,
                 .idx = descr_inode_idx % INODES_PER_BLOCK,
@@ -43,6 +47,7 @@ ext2_read_inode(bio_buf_t **buf, int device, uint32_t inode_n)
         inode_idx_t inode_idx = ext2_inode_idx(inode_n);
         *buf = bio_read(device, inode_idx.block, BLOCK_SIZE);
         ext2_inode_t *inode = (ext2_inode_t*) (*buf)->buffer + inode_idx.idx; 
+
         return inode;
 }
 
@@ -515,7 +520,10 @@ ext2_parse_dir(dentry_t *dir)
                 
                 char *new_path = ext2_sum_path(dir->path, entry->name,
                                                strlen(dir->path), entry->length);
-                
+
+                if (entry->length == 1 && entry->name[0] == '.') continue;
+                if (entry->length == 2 && entry->name[0] == '.' && entry->name[1] == '.') continue;
+
                 dentry_t *child = dir_set(inode->device, new_path, entry->inode, i);
                 dir_add_child(dir, child);
 
@@ -548,6 +556,10 @@ ext2_inode_get(inode_t *inode)
 
         bio_release(buf);
         
+        inode->write = ext2_write_content;
+        inode->read = ext2_read_content;
+
+        /*
         switch (inode->mode & 0xF000) {
         case EXT2_TYPE_FILE:
                 inode->write = ext2_write_content;
@@ -559,6 +571,7 @@ ext2_inode_get(inode_t *inode)
         default:
                 break;
         }
+        */
 }
 
 static void
@@ -592,10 +605,16 @@ ext2_init(int device)
         uint32_t bgd_blocks = RUP_DIVISION(bgd_count, BGD_PER_BLOCK);
         bg_descrs = kmalloc(BLOCK_SIZE * bgd_blocks);
 
+        for (uint32_t i = 0; i < bgd_count; ++i) {
+                bio_buf_t *buf = bio_read(device, 2 + i * sblock->blocks_pg, BLOCK_SIZE);
+                memcpy(&bg_descrs[i], buf->buffer, BLOCK_SIZE);
+        }
+        /*
         for (uint32_t i = 0; i < bgd_blocks; ++i) {
                 bio_buf_t *buf = bio_read(device, 2 + i, BLOCK_SIZE);
                 memcpy(&bg_descrs[i * BGD_PER_BLOCK], buf->buffer, BLOCK_SIZE);
         }
+        */
 
         inode_add_itf(device, ext2_inode_get, ext2_inode_update,
                       ext2_truncate, ext2_inode_alloc);

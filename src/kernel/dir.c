@@ -99,6 +99,13 @@ dir_dup(dentry_t *dentry)
 void
 dir_add_child(dentry_t *dir, dentry_t *entry)
 {
+        hash_key_t key = {.key32 = entry->path};
+        if (ht_get(dir->table, key)) {
+            return;
+        }
+
+        ht_set(dir->table, key, entry);
+
         entry->parent = _dir_dup(dir);
 
         if (dir->children)
@@ -224,7 +231,7 @@ dir_iter_get(char *path, size_t len)
         while (len) {
                 for (; path[len] != '/' && len; --len);
                 path[len] = 0;
-
+                
                 hash_key_t key = {.key32 = path};
                 dentry = ht_get(dir_head.table, key);
                 if (dentry)
@@ -243,7 +250,19 @@ dir_iter_get(char *path, size_t len)
 
                 path[len] = '/';
                 for (; len != orig_len && path[len]; ++len);
+                
+                if (len > 1 && path[len - 1] == '.') {
+                    if (len > 2 && path[len - 2] == '.') {
+                        dentry = dentry->parent;
+                        continue;
+                    }
 
+                    continue;
+                }
+
+                if (orig_len > 1 && path[orig_len - 1] == '/') {
+                    path[orig_len - 1] = 0;
+                }
                 hash_key_t key = {.key32 = path};
                 dentry = ht_get(dir_head.table, key);
                 if (!dentry) {
@@ -290,7 +309,10 @@ dir_get(char *path)
                 path = dir_sum_path(cur->path, path, strlen(cur->path), strlen(path));
                 new_path_flag = 1;
         }
-
+ 
+        size_t len = strlen(path);
+        if (len > 1 && path[len - 1] == '/') path[len - 1] = '\0';
+ 
         hash_key_t key = {.key32 = path};
         dentry_t *dentry = ht_get(dir_head.table, key);
 
@@ -304,8 +326,7 @@ dir_get(char *path)
 
                 return dentry;
         }
-        
-        size_t len = strlen(path);
+
         char path_buf[len + 1];
         memcpy(path_buf, path, len + 1);
         dentry = dir_iter_get(path_buf, len);
@@ -594,6 +615,16 @@ dir_debug_print(void)
                         dentry_t *dentry = entry[i].value;
                         kprintf("%d, %d, %d, %s\n", i, dentry->ref_count,
                                 dentry->inode->n, entry[i].key32);
+
+                        dentry_t *child = dentry->children;
+                        while (child) {
+                            
+                            kprintf("%s, %d\n", child->path, child->inode->n);
+
+                            child = child->next_sib;
+                        }
+
+                        kprintf("\n");
                 }
                 else if (entry[i].state == HT_TOMBSTONE)
                         kprintf("%d: tombstone\n", i);

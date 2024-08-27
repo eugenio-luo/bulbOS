@@ -28,6 +28,9 @@ typedef struct inode {
         uint32_t sectors;
         uint32_t blocks[INODE_BLOCKS_COUNT];
 
+        int (*write)(struct inode *, void *, size_t, size_t);
+        int (*read)(struct inode *, void *, size_t, size_t);
+        /*
         union {
                 int (*write)(struct inode *, void *, size_t, size_t);
                 int (*write_dir)(struct dentry *, struct dentry *, char *, int);
@@ -36,6 +39,7 @@ typedef struct inode {
                 int (*read)(struct inode *, void *, size_t, size_t);
                 int (*read_dir)(struct dentry *);
         };
+        */
                 
         struct inode *next;
         struct inode *prev;

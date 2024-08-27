@@ -109,7 +109,7 @@ terminal_putchar(char c)
 {
 	unsigned char uc = c;
 
-        switch (c) {
+        switch (uc) {
         case '\n':
                 terminal_newline();
                 break;

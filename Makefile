@@ -8,8 +8,8 @@ LINKER_FILE := linker.ld
 GRUB_FILE := grub.cfg
 KERNEL_NAME := bulbOS.kernel
 ISO_NAME := bulbOS.iso
-ORIG_DISK := disk-original.ext2
-COPY_DISK := disk.ext2
+ORIG_DISK := disk.ext2
+COPY_DISK := disk-tmp.ext2
 
 WARNINGS := -Wall -Wextra -pedantic
 CFLAGS := --sysroot=$(SYSROOT) -isystem=/usr/include -g -std=gnu99 -ffreestanding \
@@ -29,7 +29,6 @@ CRTN_FILE := $(shell find $(KERNEL_SRC) -type f -name "crtn.S")
 KERNEL_FILES := $(shell find $(KERNEL_SRC) \
 		 -type f \( -not -name "crt*" \) -and \( -name "*.c" -o -name "*.S" \))
 LIB_FILES := $(shell find $(LIB_SRC) -type f -name "*.c" -o -name "*.S")
-HEAD_FILES := $(shell find $(PROJDIRS) -type f -name "*.h")
 
 CRTI_OBJ := $(patsubst %.S,%.o, $(CRTI_FILE))
 CRTBEGIN_OBJ := $(patsubst %i.S,%begin.o, $(CRTI_FILE))
@@ -88,7 +87,7 @@ call_qemu:
 	@ echo "$(ECHO_COLOR)starting qemu...$(RESET)"
 	@ cp $(ORIG_DISK) $(COPY_DISK) 
 	@ qemu-system-i386 -cdrom $(ISO_NAME) -m 512M \
-	-drive file=$(COPY_DISK),format=raw $(QEMU_FLAG) &
+	-drive file=$(COPY_DISK),format=raw $(QEMU_FLAG) -serial stdio
 
 call_qemu_gdb:
 	@ echo "$(ECHO_COLOR)starting qemu...$(RESET)"

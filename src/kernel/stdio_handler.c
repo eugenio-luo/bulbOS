@@ -30,7 +30,7 @@ stdout_handler(void)
                 int b_read = file_read(stdout_read, stdout_buffer, '\0');
                 for (int i = 0; i < b_read; ++i)
                         putchar(stdout_buffer[i]);
-                        
+                
                 mutex_acquire(stdout_read->pipe->mutex);
                 condvar_wait(&stdout_read->pipe->b_read, stdout_read->pipe->mutex);
                 mutex_release(stdout_read->pipe->mutex);
@@ -53,6 +53,14 @@ stdin_keysym_to_char(void)
         }
         
         switch (code_int) {
+        case SYM_SLASH:
+                last_code.ascii = '/';
+                break;
+
+        case SYM_PERIOD:
+                last_code.ascii = '.';
+                break;
+
         case SYM_SPACE:
                 last_code.ascii = ' ';
                 break;

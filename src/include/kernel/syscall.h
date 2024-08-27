@@ -80,6 +80,7 @@ enum {
         SYS_RMDIR, /* 40 */
         SYS_DUP, /* 41 */
         SYS_PIPE, /* 42 */
+        SYS_READDIR = 460,
         SYSCALL_COUNT, /* not real syscall, only for size purpose */
 };
 
@@ -90,6 +91,9 @@ enum {
         O_RDWR = (1 << 3),
         O_TRUNC = (1 << 4),
 };
+
+#define STDIN   0
+#define STDOUT  1
 
 void syscall_init(void);
 extern void syscall_entry(void);

@@ -180,14 +180,14 @@ vprintf(const char* restrict format, va_list parameters)
 
                 default: {
                         format = format_begun_at;
-			size_t len = strlen(format);
-			if (maxrem < len) {
-				return -1;
-			}
-			if (!print(format, len))
-				return -1;
-			written += len;
-			format += len;
+			            size_t len = strlen(format);
+			            if (maxrem < len) {
+				                return -1;
+			            }
+			            if (!print(format, len))
+				                return -1;
+			            written += len;
+			            format += len;
                         break;
                 }
                 }
