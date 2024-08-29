@@ -342,14 +342,12 @@ static void
 task_terminate(void)
 {
         task_lock();
-        task_lock_scheduler();
 
         /* when a task get terminated it is simply blocked with TERMINATED
            state, then put on a list */
         current_task->next = terminated_tasks;
         terminated_tasks = current_task;
-        task_unlock_scheduler();
-
+ 
         DPRINTF("[TASK] task %d has been terminated\n", current_task->pid);
         task_block(TERMINATED);
 
