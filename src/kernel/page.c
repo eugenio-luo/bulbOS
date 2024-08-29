@@ -17,9 +17,9 @@ pd_add_table(pd_entry_t *pd_entry, page_entry_t *page_entry, pd_flags_t flags)
 #ifdef DEBUG
         uintptr_t pd_entry_addr = (uintptr_t)pd_entry;
         uint32_t num_of_entry = (pd_entry_addr & 0xFFF) / 4;
-#endif
         DPRINTF("[PAGING] page table %x -> entry n.0x%x (%d) of page directory %x\n",
                 page_entry, num_of_entry, num_of_entry, pd_entry_addr & 0xFFFFF000);
+#endif
 
         *pd_entry = (uintptr_t)page_entry | flags;
 }
@@ -113,7 +113,6 @@ page_identity_pte(page_entry_t *page_table, uintptr_t addr, uintptr_t size)
                 pt_add_entry(entry, (void*)addr, PT_PRESENT | PT_READ_WRITE | PT_USER);
 }
         
-/* WARNING! it can be used only after PMM has been set up */
 void
 page_identity_map(pd_entry_t *page_dir, uintptr_t addr, uintptr_t size)
 {

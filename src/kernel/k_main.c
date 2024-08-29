@@ -36,12 +36,13 @@
 #include <kernel/syscall.h>
 #include <kernel/stdio_handler.h>
 
+/* TODO: rewrite libc, pic.c, apic.c, pci.c, ide.c */
+
 /*
 #include <kernel/vfs.h>
 #include <kernel/vbe.h>
 */
 
-/* TODO: rewrite libc, pic.c, apic.c, pci.c, ide.c */
 int
 kernel_main(void)
 {

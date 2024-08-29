@@ -142,11 +142,9 @@ _start:
         
         movl $stack_top, %esp
 
-	call _init
-        
-	call kernel_main
+	    call kernel_main
 
         /* kernel SHOULDN'T never reach here */
-	cli
-1:	hlt
-	jmp 1b
+	    cli
+1:	    hlt
+	    jmp 1b
