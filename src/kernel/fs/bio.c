@@ -178,6 +178,7 @@ void
 bio_write(bio_buf_t *buf)
 {
         ide_write_disk(buf->device, buf->buffer, buf->block * buf->size, buf->size);
+        buf->valid = 0;
 }
 
 void

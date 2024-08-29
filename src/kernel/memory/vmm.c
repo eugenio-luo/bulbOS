@@ -186,8 +186,12 @@ kmalloc(size_t size)
 {
         if (!size) return NULL;
        
-        if (size == PAGE_FRAME_SIZE)
-                return vmm_block_alloc();
+        if (size == PAGE_FRAME_SIZE) {
+                void *ptr = vmm_block_alloc();
+                
+                if (ptr)
+                    return ptr;
+        }
 
         return vmm_list_alloc(size);
 }
